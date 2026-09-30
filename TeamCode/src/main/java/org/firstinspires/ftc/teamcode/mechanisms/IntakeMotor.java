@@ -127,7 +127,7 @@ public class IntakeMotor {
     }
 
     public void run(double motorPower) {
-        double usePower = Math.max(Math.abs(motorPower), maxPower);
+        double usePower = Math.min(Math.abs(motorPower), maxPower);
         if (motorPower < 0) usePower *= -1;
 
         intakeMotor.setPower(usePower);

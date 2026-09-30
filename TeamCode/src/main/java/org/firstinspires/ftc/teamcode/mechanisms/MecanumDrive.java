@@ -44,8 +44,6 @@ public class MecanumDrive {
     private double leftPowerBack;
     private double rightPowerBack;
 
-    private double maxPower = 1.0;
-
     private IMU imu;
     private double driveAngularOffset;
 
@@ -182,11 +180,11 @@ public class MecanumDrive {
         double drivePowerMax = Math.max(Math.abs(leftPowerFront), Math.max(Math.abs(rightPowerFront),
                 Math.max(Math.abs(leftPowerBack), Math.abs(rightPowerBack))));
 
-        if (drivePowerMax > maxPower) {
-            leftPowerFront  = maxPower * (leftPowerFront / drivePowerMax);
-            rightPowerFront = maxPower * (rightPowerFront / drivePowerMax);
-            leftPowerBack   = maxPower * (leftPowerBack / drivePowerMax);
-            rightPowerBack  = maxPower * (rightPowerBack / drivePowerMax);
+        if (drivePowerMax > 1.0) {
+            leftPowerFront  /= drivePowerMax;
+            rightPowerFront /= drivePowerMax;
+            leftPowerBack   /= drivePowerMax;
+            rightPowerBack  /= drivePowerMax;
         }
 
         leftDriveFront.setPower(leftPowerFront);
@@ -224,14 +222,6 @@ public class MecanumDrive {
 
     public void resetDriveYaw() {
         imu.resetYaw();
-    }
-
-    public void setMaxPower(double maxPower) {
-        this.maxPower = maxPower;
-    }
-
-    public double getMaxPower() {
-        return this.maxPower;
     }
 
     public double getLeftPowerFront() {
