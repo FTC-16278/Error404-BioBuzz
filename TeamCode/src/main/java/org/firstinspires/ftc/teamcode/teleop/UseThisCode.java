@@ -49,46 +49,57 @@ public class UseThisCode extends OpMode {
     private Servo nectarGate = null;
     private Servo pollenGate = null;
 
-    // Separate speed variables for each launcher
-    public final int NECTAR_TARGET_VELOCITY = 1250; // Nectar launcher speed
-    public final int POLLEN_TARGET_VELOCITY = 1225; // Pollen launcher speed
+    // Separate speed variables for each launcher (Encapsulated as private static final)
+    private static final int NECTAR_TARGET_VELOCITY = 1250; // Nectar launcher speed
+    private static final int POLLEN_TARGET_VELOCITY = 1225; // Pollen launcher speed
 
     // Minimum velocity thresholds set to 90% of the target velocity
-    public final double NECTAR_MIN_GATE_VELOCITY = NECTAR_TARGET_VELOCITY * 0.90;
-    public final double POLLEN_MIN_GATE_VELOCITY = POLLEN_TARGET_VELOCITY * 0.90;
+    private static final double NECTAR_MIN_GATE_VELOCITY = NECTAR_TARGET_VELOCITY * 0.90;
+    private static final double POLLEN_MIN_GATE_VELOCITY = POLLEN_TARGET_VELOCITY * 0.90;
 
     // Pollen Gate Positions
-    public final double POLLEN_GATE_CLOSED = 0.0;
-    public final double POLLEN_GATE_OPEN = 0.3;
+    private static final double POLLEN_GATE_CLOSED = 0.0;
+    private static final double POLLEN_GATE_OPEN = 0.3;
 
     // Nectar Gate Positions
-    public final double NECTAR_GATE_CLOSED = 0.0;
-    public final double NECTAR_GATE_OPEN = 0.3;
+    private static final double NECTAR_GATE_CLOSED = 0.0;
+    private static final double NECTAR_GATE_OPEN = 0.3;
 
     // Drive Balance Trims (Adjust these if the robot still drifts)
-    public final double LEFT_DRIVE_MULTIPLIER = 1.0;
-    public final double RIGHT_DRIVE_MULTIPLIER = 0.8;
+    private static final double LEFT_DRIVE_MULTIPLIER = 1.0;
+    private static final double RIGHT_DRIVE_MULTIPLIER = 0.8;
 
-    double leftFrontPower;
-    double rightFrontPower;
-    double leftBackPower;
-    double rightBackPower;
+    // Launcher PIDF Tuning Constants
+    private static final double LAUNCHER_P = 40.0;
+    private static final double LAUNCHER_I = 0.0;
+    private static final double LAUNCHER_D = 0.0;
+    private static final double LAUNCHER_F = 12.5;
+
+    // Internal state variables (Encapsulated as private)
+    private double leftFrontPower;
+    private double rightFrontPower;
+    private double leftBackPower;
+    private double rightBackPower;
 
     // Intake power variable
-    double intakePower;
+    private double intakePower;
 
     // Toggle state variables for triggers & bumpers
-    boolean leftTriggerWasPressed = false;
-    boolean nectarLauncherOn = false;
+    private boolean leftTriggerWasPressed = false;
+    private boolean nectarLauncherOn = false;
 
-    boolean rightTriggerWasPressed = false;
-    boolean pollenLauncherOn = false;
+    private boolean rightTriggerWasPressed = false;
+    private boolean pollenLauncherOn = false;
 
-    boolean leftBumperWasPressed = false;
-    boolean intakeForwardOn = false;
+    private boolean leftBumperWasPressed = false;
+    private boolean intakeForwardOn = false;
 
-    boolean rightBumperWasPressed = false;
-    boolean intakeReverseOn = false;
+    private boolean rightBumperWasPressed = false;
+    private boolean intakeReverseOn = false;
+
+    // State tracking variables to prevent gate flutter/jamming
+    private boolean nectarAtSpeed = false;
+    private boolean pollenAtSpeed = false;
 
     /*
      * Code to run ONCE when the driver hits INIT
@@ -141,12 +152,14 @@ public class UseThisCode extends OpMode {
         pollenLauncher.setZeroPowerBehavior(BRAKE);
         nectarLauncher.setZeroPowerBehavior(BRAKE);
 
-        // Configure launcher motors to use encoders and PIDF tuning
+        // Configure launcher motors to use encoders and PIDF tuning using constants
         pollenLauncher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         nectarLauncher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        pollenLauncher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(40, 0, 0, 12.5));
-        nectarLauncher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(40, 0, 0, 12.5));
+        pollenLauncher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,
+                new PIDFCoefficients(LAUNCHER_P, LAUNCHER_I, LAUNCHER_D, LAUNCHER_F));
+        nectarLauncher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,
+                new PIDFCoefficients(LAUNCHER_P, LAUNCHER_I, LAUNCHER_D, LAUNCHER_F));
 
         // Ensure gates start firmly in the closed position upon initialization
         nectarGate.setPosition(NECTAR_GATE_CLOSED);
@@ -224,7 +237,7 @@ public class UseThisCode extends OpMode {
     public void stop() {
     }
 
-    void mecanumDrive(double forward, double strafe, double rotate) {
+    private void mecanumDrive(double forward, double strafe, double rotate) {
         leftFrontPower = forward + strafe + rotate;
         rightFrontPower = forward - strafe - rotate;
         leftBackPower = forward - strafe + rotate;
@@ -248,13 +261,18 @@ public class UseThisCode extends OpMode {
         rightBackDrive.setPower(rightBackPower * RIGHT_DRIVE_MULTIPLIER);
     }
 
-    void launch() {
+    private void launch() {
         // Nectar Launcher & Gate (Left)
         if (nectarLauncherOn) {
             nectarLauncher.setVelocity(NECTAR_TARGET_VELOCITY);
 
-            // Only open the gate once the motor velocity reaches or exceeds the minimum threshold
+            // Once it hits the threshold for the first time, flag it as ready
             if (nectarLauncher.getVelocity() >= NECTAR_MIN_GATE_VELOCITY) {
+                nectarAtSpeed = true;
+            }
+
+            // Keep the gate open as long as the launcher is on and has reached speed once
+            if (nectarAtSpeed) {
                 nectarGate.setPosition(NECTAR_GATE_OPEN);
             } else {
                 nectarGate.setPosition(NECTAR_GATE_CLOSED);
@@ -262,14 +280,20 @@ public class UseThisCode extends OpMode {
         } else {
             nectarLauncher.setVelocity(0);
             nectarGate.setPosition(NECTAR_GATE_CLOSED);
+            nectarAtSpeed = false; // Reset when turned off
         }
 
         // Pollen Launcher & Gate (Right)
         if (pollenLauncherOn) {
             pollenLauncher.setVelocity(POLLEN_TARGET_VELOCITY);
 
-            // Only open the gate once the motor velocity reaches or exceeds the minimum threshold
+            // Once it hits the threshold for the first time, flag it as ready
             if (pollenLauncher.getVelocity() >= POLLEN_MIN_GATE_VELOCITY) {
+                pollenAtSpeed = true;
+            }
+
+            // Keep the gate open as long as the launcher is on and has reached speed once
+            if (pollenAtSpeed) {
                 pollenGate.setPosition(POLLEN_GATE_OPEN);
             } else {
                 pollenGate.setPosition(POLLEN_GATE_CLOSED);
@@ -277,6 +301,7 @@ public class UseThisCode extends OpMode {
         } else {
             pollenLauncher.setVelocity(0);
             pollenGate.setPosition(POLLEN_GATE_CLOSED);
+            pollenAtSpeed = false; // Reset when turned off
         }
     }
 }
