@@ -33,7 +33,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 @Autonomous(name = "Autonomous Use This Code", group = "ERROR404")
 //@Disabled
-public class AutonomousBioBuzz extends LinearOpMode {
+public class UseThisCode extends LinearOpMode {
 
     // Declare OpMode members.
     private DcMotor leftFrontDrive = null;

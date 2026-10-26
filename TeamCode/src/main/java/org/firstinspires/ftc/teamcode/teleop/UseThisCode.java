@@ -31,7 +31,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 
-@TeleOp(name = "TeleOp Code Use This", group = "ERROR404")
+@TeleOp(name = "TeleOp Use This Code", group = "ERROR404")
 //@Disabled
 public class UseThisCode extends OpMode {
 
