@@ -1,11 +1,19 @@
 package org.firstinspires.ftc.teamcode.teleop;
 
+import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE;
 import static com.qualcomm.robotcore.hardware.DcMotorSimple.Direction.FORWARD;
 import static com.qualcomm.robotcore.hardware.DcMotorSimple.Direction.REVERSE;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.mechanisms.IntakeMotor;
@@ -27,6 +35,7 @@ import org.firstinspires.ftc.teamcode.mechanisms.MecanumDrive;
  */
 
 @TeleOp (name = "Mecannum BioBuzz TeleOp", group = "Error404")
+@Disabled
 public class MecanumBioBuzzTeleOp extends OpMode {
     double DRIVE_MAX_FORWARD_SPEED = 1.0;  // throttle strafe speed
     double DRIVE_MAX_ANGULAR_SPEED = 1.0;  // throttle rotate speed
