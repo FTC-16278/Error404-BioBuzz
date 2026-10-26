@@ -52,6 +52,7 @@ public class DualIntakeDualLaunch extends OpMode {
     private DcMotorEx nectarLauncher = null;
     private DcMotor leftIntake = null;
     private DcMotor rightIntake = null;
+    private CRServo windmillServo = null;
 
     // Intake state variables: 0 = OFF, 1 = FORWARD (Right Bumper), -1 = REVERSE (Left Bumper)
     private int intakeState = 0;
@@ -108,6 +109,7 @@ public class DualIntakeDualLaunch extends OpMode {
         rightIntake = hardwareMap.get(DcMotor.class, "right_intake");
         pollenLauncher = hardwareMap.get(DcMotorEx.class, "pollen_launcher");
         nectarLauncher = hardwareMap.get(DcMotorEx.class, "nectar_launcher");
+        windmillServo = hardwareMap.get(CRServo.class, "windmillServo");
 
         /*
          * Set motor directions.
@@ -149,6 +151,12 @@ public class DualIntakeDualLaunch extends OpMode {
 
         nectarLauncher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         nectarLauncher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(40, 0, 0, 12.5));
+
+        /*
+         * Set feeder servo initial state.
+         */
+        windmillServo.setPower(0);
+        windmillServo.setDirection(DcMotorSimple.Direction.REVERSE);
 
         /*
          * Tell driver initialization is complete.
@@ -273,6 +281,16 @@ public class DualIntakeDualLaunch extends OpMode {
             nectarLauncher.setVelocity(NECTAR_LAUNCHER_TARGET_VELOCITY);
         } else {
             nectarLauncher.setVelocity(0);
+        }
+
+        // Turn on feeder servo if an active launcher reaches its minimum target speed
+        boolean pollenReady = pollenToggleState && (pollenLauncher.getVelocity() > POLLEN_LAUNCHER_MIN_VELOCITY);
+        boolean nectarReady = nectarToggleState && (nectarLauncher.getVelocity() > NECTAR_LAUNCHER_MIN_VELOCITY);
+
+        if (pollenReady || nectarReady) {
+            windmillServo.setPower(1.0);
+        } else {
+            windmillServo.setPower(0.0);
         }
     }
 }
