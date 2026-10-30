@@ -50,8 +50,8 @@ public class UseThisCode extends OpMode {
     private Servo pollenGate = null;
 
     // Separate speed variables for each launcher (Encapsulated as private static final)
-    private static final int NECTAR_TARGET_VELOCITY = 1250; // Nectar launcher speed
-    private static final int POLLEN_TARGET_VELOCITY = 1225; // Pollen launcher speed
+    private static final int NECTAR_TARGET_VELOCITY = 1250; // Nectar (large Blue/Red balls) launcher speed
+    private static final int POLLEN_TARGET_VELOCITY = 1225; // Pollen (small Yellow balls) launcher speed
 
     // Minimum velocity thresholds set to 90% of the target velocity
     private static final double NECTAR_MIN_GATE_VELOCITY = NECTAR_TARGET_VELOCITY * 0.90;
@@ -67,7 +67,7 @@ public class UseThisCode extends OpMode {
 
     // Drive Balance Trims (Adjust these if the robot still drifts)
     private static final double LEFT_DRIVE_MULTIPLIER = 1.0;
-    private static final double RIGHT_DRIVE_MULTIPLIER = 0.8;
+    private static final double RIGHT_DRIVE_MULTIPLIER = 1.0;
 
     // Launcher PIDF Tuning Constants
     private static final double LAUNCHER_P = 40.0;
@@ -84,13 +84,7 @@ public class UseThisCode extends OpMode {
     // Intake power variable
     private double intakePower;
 
-    // Toggle state variables for triggers & bumpers
-    private boolean leftTriggerWasPressed = false;
-    private boolean nectarLauncherOn = false;
-
-    private boolean rightTriggerWasPressed = false;
-    private boolean pollenLauncherOn = false;
-
+    // Toggle state variables for bumpers only (Triggers are now hold-to-run)
     private boolean leftBumperWasPressed = false;
     private boolean intakeForwardOn = false;
 
@@ -181,19 +175,7 @@ public class UseThisCode extends OpMode {
         // Driver controls: Left stick Y = forward/reverse, Left stick X = strafe, Right stick X = turn
         mecanumDrive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
 
-        // Launcher Toggle Logic for Left Trigger (nectar_launcher) and Right Trigger (pollen_launcher)
-        boolean leftTriggerPressed = (gamepad1.left_trigger > 0.5);
-        if (leftTriggerPressed && !leftTriggerWasPressed) {
-            nectarLauncherOn = !nectarLauncherOn;
-        }
-        leftTriggerWasPressed = leftTriggerPressed;
-
-        boolean rightTriggerPressed = (gamepad1.right_trigger > 0.5);
-        if (rightTriggerPressed && !rightTriggerWasPressed) {
-            pollenLauncherOn = !pollenLauncherOn;
-        }
-        rightTriggerWasPressed = rightTriggerPressed;
-
+        // Call launch method which checks if triggers are held down
         launch();
 
         // Intake Toggle Logic for Left Bumper (Forward) and Right Bumper (Reverse)
@@ -227,6 +209,9 @@ public class UseThisCode extends OpMode {
         // Write power to intake motors
         leftIntake.setPower(intakePower);
         rightIntake.setPower(intakePower);
+
+        boolean nectarLauncherOn = (gamepad1.left_trigger > 0.5);
+        boolean pollenLauncherOn = (gamepad1.right_trigger > 0.5);
 
         telemetry.addData("Motors", "left (%.2f), right (%.2f)", leftFrontPower, rightFrontPower);
         telemetry.addData("Launchers", "nectar (%s), pollen (%s)", nectarLauncherOn ? "ON" : "OFF", pollenLauncherOn ? "ON" : "OFF");
@@ -262,16 +247,16 @@ public class UseThisCode extends OpMode {
     }
 
     private void launch() {
-        // Nectar Launcher & Gate (Left)
-        if (nectarLauncherOn) {
+        // Nectar Launcher & Gate (Left Trigger Hold)
+        if (gamepad1.left_trigger > 0.5) {
             nectarLauncher.setVelocity(NECTAR_TARGET_VELOCITY);
 
-            // Once it hits the threshold for the first time, flag it as ready
+            // Once it hits the threshold for the first time while held, flag it as ready
             if (nectarLauncher.getVelocity() >= NECTAR_MIN_GATE_VELOCITY) {
                 nectarAtSpeed = true;
             }
 
-            // Keep the gate open as long as the launcher is on and has reached speed once
+            // Keep the gate open as long as it has reached speed once during this hold
             if (nectarAtSpeed) {
                 nectarGate.setPosition(NECTAR_GATE_OPEN);
             } else {
@@ -280,19 +265,19 @@ public class UseThisCode extends OpMode {
         } else {
             nectarLauncher.setVelocity(0);
             nectarGate.setPosition(NECTAR_GATE_CLOSED);
-            nectarAtSpeed = false; // Reset when turned off
+            nectarAtSpeed = false; // Reset when trigger is released
         }
 
-        // Pollen Launcher & Gate (Right)
-        if (pollenLauncherOn) {
+        // Pollen Launcher & Gate (Right Trigger Hold)
+        if (gamepad1.right_trigger > 0.5) {
             pollenLauncher.setVelocity(POLLEN_TARGET_VELOCITY);
 
-            // Once it hits the threshold for the first time, flag it as ready
+            // Once it hits the threshold for the first time while held, flag it as ready
             if (pollenLauncher.getVelocity() >= POLLEN_MIN_GATE_VELOCITY) {
                 pollenAtSpeed = true;
             }
 
-            // Keep the gate open as long as the launcher is on and has reached speed once
+            // Keep the gate open as long as it has reached speed once during this hold
             if (pollenAtSpeed) {
                 pollenGate.setPosition(POLLEN_GATE_OPEN);
             } else {
@@ -301,7 +286,7 @@ public class UseThisCode extends OpMode {
         } else {
             pollenLauncher.setVelocity(0);
             pollenGate.setPosition(POLLEN_GATE_CLOSED);
-            pollenAtSpeed = false; // Reset when turned off
+            pollenAtSpeed = false; // Reset when trigger is released
         }
     }
 }
