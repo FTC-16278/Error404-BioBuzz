@@ -30,6 +30,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.VoltageSensor;
 
 @TeleOp(name = "TeleOp Use This Code", group = "ERROR404")
 //@Disabled
@@ -48,6 +49,10 @@ public class UseThisCode extends OpMode {
     // Declare gate servos as standard Servo
     private Servo nectarGate = null;
     private Servo pollenGate = null;
+
+    // Declare goBILDA indicator light servo and voltage sensor
+    private Servo indicatorLight = null;
+    private VoltageSensor batteryVoltageSensor = null;
 
     // Separate speed variables for each launcher (Encapsulated as private static final)
     private static final int NECTAR_TARGET_VELOCITY = 1250; // Nectar (large Blue/Red balls) launcher speed
@@ -120,6 +125,10 @@ public class UseThisCode extends OpMode {
         pollenLauncher = hardwareMap.get(DcMotorEx.class, "pollen_launcher");   // Port 3
         pollenGate = hardwareMap.get(Servo.class, "pollen_gate");               // Servo port
 
+        // Initialize goBILDA Indicator Light and Voltage Sensor
+        indicatorLight = hardwareMap.get(Servo.class, "indicator_light");
+        batteryVoltageSensor = hardwareMap.voltageSensor.iterator().next();
+
         // Drivetrain direction setup
         leftFrontDrive.setDirection(DcMotor.Direction.REVERSE);
         rightFrontDrive.setDirection(DcMotor.Direction.FORWARD);
@@ -178,6 +187,14 @@ public class UseThisCode extends OpMode {
         // Call launch method which checks if triggers are held down
         launch();
 
+        // Check battery voltage and control the goBILDA indicator light color
+        double currentVoltage = batteryVoltageSensor.getVoltage();
+        if (currentVoltage >= 12.0) {
+            indicatorLight.setPosition(0.33); // Green
+        } else {
+            indicatorLight.setPosition(0.0);  // Red
+        }
+
         // Intake Toggle Logic for Left Bumper (Forward) and Right Bumper (Reverse)
         boolean leftBumperPressed = gamepad1.left_bumper;
         if (leftBumperPressed && !leftBumperWasPressed) {
@@ -213,6 +230,7 @@ public class UseThisCode extends OpMode {
         boolean nectarLauncherOn = (gamepad1.left_trigger > 0.5);
         boolean pollenLauncherOn = (gamepad1.right_trigger > 0.5);
 
+        telemetry.addData("Battery Voltage", "%.2fV (%s)", currentVoltage, currentVoltage >= 12.0 ? "GREEN" : "RED");
         telemetry.addData("Motors", "left (%.2f), right (%.2f)", leftFrontPower, rightFrontPower);
         telemetry.addData("Launchers", "nectar (%s), pollen (%s)", nectarLauncherOn ? "ON" : "OFF", pollenLauncherOn ? "ON" : "OFF");
         telemetry.addData("Launcher Vels", "nectar (%.0f), pollen (%.0f)", nectarLauncher.getVelocity(), pollenLauncher.getVelocity());
