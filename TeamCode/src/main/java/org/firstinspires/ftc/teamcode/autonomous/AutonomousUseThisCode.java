@@ -50,7 +50,7 @@ public class AutonomousUseThisCode extends LinearOpMode {
     // TUNING VARIABLES (Easily adjust times and speeds here)
     // ==========================================
     // Launcher Settings
-    public final int POLLEN_TARGET_VELOCITY = 1225; // Pollen (small Yellow ballS) launcher speed
+    public final int POLLEN_TARGET_VELOCITY = 1225;
     public final double POLLEN_MIN_GATE_VELOCITY = POLLEN_TARGET_VELOCITY * 0.90;
     public final double POLLEN_FIRE_DURATION = 4.0; // Seconds to fire pollen balls
 
@@ -63,7 +63,7 @@ public class AutonomousUseThisCode extends LinearOpMode {
     public final double RIGHT_DRIVE_MULTIPLIER = 1.0;
 
     // Movement Durations (Seconds)
-    public final double MOVE_BACK_DURATION = 0.5;
+    public final double MOVE_BACK_DURATION = 0.4;
     public final double STRAFE_LEFT_DURATION = 1.2;   // Adjust this duration to control how far it strafes left
     // ==========================================
 
