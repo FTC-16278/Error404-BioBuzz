@@ -233,9 +233,6 @@ public class UseThisCode extends OpMode {
         leftIntake.setPower(intakePower);
         rightIntake.setPower(intakePower);
 
-        boolean nectarLauncherOn = (gamepad1.left_trigger > 0.5);
-        boolean pollenLauncherOn = (gamepad1.right_trigger > 0.5);
-
         telemetry.addData("Battery Voltage", "%.2fV (%s)", currentVoltage, currentVoltage >= 12.0 ? "GREEN" : "RED");
         telemetry.addData("Velocity Reduction", "-%.1f RPM", velocityReduction);
         telemetry.addData("Target Vels", "nectar (%d), pollen (%d)", adjustedNectarTarget, adjustedPollenTarget);
