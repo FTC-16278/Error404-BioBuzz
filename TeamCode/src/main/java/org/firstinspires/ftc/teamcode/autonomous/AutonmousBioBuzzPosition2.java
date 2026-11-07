@@ -42,8 +42,7 @@ public class AutonmousBioBuzzPosition2 extends LinearOpMode {
     private DcMotor rightBackDrive = null;
     private DcMotorEx pollenLauncher = null;
 
-    // Declare gate servos as standard Servo
-    private Servo nectarGate = null;
+    // Declare gate servo
     private Servo pollenGate = null;
 
     // ==========================================
@@ -57,22 +56,17 @@ public class AutonmousBioBuzzPosition2 extends LinearOpMode {
     public final double DRIVE_SPEED = 0.8;
     public final double STRAFE_SPEED = 0.8; // Speed used for strafing
 
-    // Drive Balance Trims (Matches TeleOp to prevent drifting while driving straight)
-    public final double LEFT_DRIVE_MULTIPLIER = 1.0;
-    public final double RIGHT_DRIVE_MULTIPLIER = 1.0;
-
     // Movement & Action Durations (Seconds)
     public final double POLLEN_FIRE_DURATION = 4.0;     // Step 1: Fire pollen balls
     public final double MOVE_BACK_1_DURATION = 0.4;     // Step 2: First backward movement
-    public final double STRAFE_RIGHT_1_DURATION = 1.0;  // Step 3: First strafe right movement
+    public final double STRAFE_RIGHT_1_DURATION = 0.3;  // Step 3: First strafe right movement
     public final double MOVE_BACK_2_DURATION = 1.1;     // Step 4: Second backward movement
     public final double STRAFE_RIGHT_2_DURATION = 0.3;  // Step 5: Second strafe right movement
     // ==========================================
 
-    // Pollen & Nectar Gate Positions
+    // Pollen Gate Positions
     public final double POLLEN_GATE_CLOSED = 0.0;
     public final double POLLEN_GATE_OPEN = 0.3;
-    public final double NECTAR_GATE_CLOSED = 0.0;
 
     @Override
     public void runOpMode() {
@@ -82,8 +76,6 @@ public class AutonmousBioBuzzPosition2 extends LinearOpMode {
         // ==========================================
         leftFrontDrive = hardwareMap.get(DcMotor.class, "left_front_drive");   // Port 0
         leftBackDrive = hardwareMap.get(DcMotor.class, "left_back_drive");       // Port 1
-        nectarGate = hardwareMap.get(Servo.class, "nectar_gate");
-        nectarGate.setDirection(Servo.Direction.REVERSE);
 
         // ==========================================
         // EXPANSION HUB MOTORS & SERVOS
@@ -113,8 +105,7 @@ public class AutonmousBioBuzzPosition2 extends LinearOpMode {
         pollenLauncher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         pollenLauncher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(40, 0, 0, 12.5));
 
-        // Ensure gates start firmly in the closed position upon initialization
-        nectarGate.setPosition(NECTAR_GATE_CLOSED);
+        // Ensure gate starts firmly in the closed position upon initialization
         pollenGate.setPosition(POLLEN_GATE_CLOSED);
 
         telemetry.addData("Status", "Initialized. Waiting for Start.");
@@ -207,12 +198,12 @@ public class AutonmousBioBuzzPosition2 extends LinearOpMode {
     // HELPER METHODS
     // ==========================================
 
-    // Applies balance multipliers so straight/strafe driving doesn't drift unevenly
+    // Directly assigns power to drivetrain motors without unused multiplier layers
     private void setDrivePower(double lf, double rf, double lb, double rb) {
-        leftFrontDrive.setPower(lf * LEFT_DRIVE_MULTIPLIER);
-        rightFrontDrive.setPower(rf * RIGHT_DRIVE_MULTIPLIER);
-        leftBackDrive.setPower(lb * LEFT_DRIVE_MULTIPLIER);
-        rightBackDrive.setPower(rb * RIGHT_DRIVE_MULTIPLIER);
+        leftFrontDrive.setPower(lf);
+        rightFrontDrive.setPower(rf);
+        leftBackDrive.setPower(lb);
+        rightBackDrive.setPower(rb);
     }
 
     // Stops all drivetrain motors safely
