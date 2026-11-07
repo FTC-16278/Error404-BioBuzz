@@ -70,10 +70,6 @@ public class UseThisCode extends OpMode {
     private static final double NECTAR_GATE_CLOSED = 0.0;
     private static final double NECTAR_GATE_OPEN = 0.3;
 
-    // Drive Balance Trims (Adjust these if the robot still drifts)
-    private static final double LEFT_DRIVE_MULTIPLIER = 1.0;
-    private static final double RIGHT_DRIVE_MULTIPLIER = 1.0;
-
     // Launcher PIDF Tuning Constants
     private static final double LAUNCHER_P = 40.0;
     private static final double LAUNCHER_I = 0.0;
@@ -172,14 +168,6 @@ public class UseThisCode extends OpMode {
     }
 
     @Override
-    public void init_loop() {
-    }
-
-    @Override
-    public void start() {
-    }
-
-    @Override
     public void loop() {
         // Driver controls: Left stick Y = forward/reverse, Left stick X = strafe, Right stick X = turn
         mecanumDrive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
@@ -236,10 +224,6 @@ public class UseThisCode extends OpMode {
         telemetry.addData("Launcher Vels", "nectar (%.0f), pollen (%.0f)", nectarLauncher.getVelocity(), pollenLauncher.getVelocity());
     }
 
-    @Override
-    public void stop() {
-    }
-
     private void mecanumDrive(double forward, double strafe, double rotate) {
         leftFrontPower = forward + strafe + rotate;
         rightFrontPower = forward - strafe - rotate;
@@ -257,11 +241,11 @@ public class UseThisCode extends OpMode {
             rightBackPower /= max;
         }
 
-        // Apply balance multipliers to counteract mechanical pull
-        leftFrontDrive.setPower(leftFrontPower * LEFT_DRIVE_MULTIPLIER);
-        rightFrontDrive.setPower(rightFrontPower * RIGHT_DRIVE_MULTIPLIER);
-        leftBackDrive.setPower(leftBackPower * LEFT_DRIVE_MULTIPLIER);
-        rightBackDrive.setPower(rightBackPower * RIGHT_DRIVE_MULTIPLIER);
+        // Set power directly to drivetrain motors without multipliers
+        leftFrontDrive.setPower(leftFrontPower);
+        rightFrontDrive.setPower(rightFrontPower);
+        leftBackDrive.setPower(leftBackPower);
+        rightBackDrive.setPower(rightBackPower);
     }
 
     private void launch() {
