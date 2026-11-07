@@ -31,6 +31,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
+import com.qualcomm.robotcore.util.Range;
 
 @TeleOp(name = "TeleOp Use This Code", group = "ERROR404")
 //@Disabled
@@ -54,13 +55,9 @@ public class UseThisCode extends OpMode {
     private Servo indicatorLight = null;
     private VoltageSensor batteryVoltageSensor = null;
 
-    // Separate speed variables for each launcher (Encapsulated as private static final)
-    private static final int NECTAR_TARGET_VELOCITY = 1250; // Nectar (large Blue/Red balls) launcher speed
-    private static final int POLLEN_TARGET_VELOCITY = 1225; // Pollen (small Yellow balls) launcher speed
-
-    // Minimum velocity thresholds set to 90% of the target velocity
-    private static final double NECTAR_MIN_GATE_VELOCITY = NECTAR_TARGET_VELOCITY * 0.90;
-    private static final double POLLEN_MIN_GATE_VELOCITY = POLLEN_TARGET_VELOCITY * 0.90;
+    // Base target speeds (when battery is at 12.0V or lower)
+    private static final int BASE_NECTAR_TARGET_VELOCITY = 1250;
+    private static final int BASE_POLLEN_TARGET_VELOCITY = 1225;
 
     // Pollen Gate Positions
     private static final double POLLEN_GATE_CLOSED = 0.0;
@@ -84,6 +81,9 @@ public class UseThisCode extends OpMode {
 
     // Intake power variable
     private double intakePower;
+
+    // Voltage reduction tracking variable for stable compensation
+    private double velocityReduction = 0.0;
 
     // Toggle state variables for bumpers only (Triggers are now hold-to-run)
     private boolean leftBumperWasPressed = false;
@@ -172,9 +172,6 @@ public class UseThisCode extends OpMode {
         // Driver controls: Left stick Y = forward/reverse, Left stick X = strafe, Right stick X = turn
         mecanumDrive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
 
-        // Call launch method which checks if triggers are held down
-        launch();
-
         // Check battery voltage and control the goBILDA indicator light color
         double currentVoltage = batteryVoltageSensor.getVoltage();
         if (currentVoltage >= 12.0) {
@@ -182,6 +179,27 @@ public class UseThisCode extends OpMode {
         } else {
             indicatorLight.setPosition(0.0);  // Red
         }
+
+        // ==========================================
+        // STABLE VOLTAGE COMPENSATION FOR LAUNCHERS
+        // ==========================================
+        // Only sample/update voltage penalty when triggers are idle to prevent sag-induced jumps
+        if (gamepad1.left_trigger <= 0.5 && gamepad1.right_trigger <= 0.5) {
+            double voltageProportion = Range.clip((currentVoltage - 12.0) / (14.5 - 12.0), 0.0, 1.0);
+            velocityReduction = voltageProportion * 50.0;
+        }
+
+        // Calculate final target velocities adjusted for the battery charge level
+        int adjustedNectarTarget = (int) Math.round(BASE_NECTAR_TARGET_VELOCITY - velocityReduction);
+        int adjustedPollenTarget = (int) Math.round(BASE_POLLEN_TARGET_VELOCITY - velocityReduction);
+
+        // Dynamic gate velocity thresholds (90% of current adjusted target)
+        double nectarMinGateVel = adjustedNectarTarget * 0.90;
+        double pollenMinGateVel = adjustedPollenTarget * 0.90;
+
+        // Call launch method passing the dynamically adjusted targets
+        launch(adjustedNectarTarget, adjustedPollenTarget, nectarMinGateVel, pollenMinGateVel);
+        // ==========================================
 
         // Intake Toggle Logic for Left Bumper (Forward) and Right Bumper (Reverse)
         boolean leftBumperPressed = gamepad1.left_bumper;
@@ -219,8 +237,8 @@ public class UseThisCode extends OpMode {
         boolean pollenLauncherOn = (gamepad1.right_trigger > 0.5);
 
         telemetry.addData("Battery Voltage", "%.2fV (%s)", currentVoltage, currentVoltage >= 12.0 ? "GREEN" : "RED");
-        telemetry.addData("Motors", "left (%.2f), right (%.2f)", leftFrontPower, rightFrontPower);
-        telemetry.addData("Launchers", "nectar (%s), pollen (%s)", nectarLauncherOn ? "ON" : "OFF", pollenLauncherOn ? "ON" : "OFF");
+        telemetry.addData("Velocity Reduction", "-%.1f RPM", velocityReduction);
+        telemetry.addData("Target Vels", "nectar (%d), pollen (%d)", adjustedNectarTarget, adjustedPollenTarget);
         telemetry.addData("Launcher Vels", "nectar (%.0f), pollen (%.0f)", nectarLauncher.getVelocity(), pollenLauncher.getVelocity());
     }
 
@@ -248,13 +266,13 @@ public class UseThisCode extends OpMode {
         rightBackDrive.setPower(rightBackPower);
     }
 
-    private void launch() {
+    private void launch(int nectarTarget, int pollenTarget, double nectarMinGate, double pollenMinGate) {
         // Nectar Launcher & Gate (Left Trigger Hold)
         if (gamepad1.left_trigger > 0.5) {
-            nectarLauncher.setVelocity(NECTAR_TARGET_VELOCITY);
+            nectarLauncher.setVelocity(nectarTarget);
 
             // Once it hits the threshold for the first time while held, flag it as ready
-            if (nectarLauncher.getVelocity() >= NECTAR_MIN_GATE_VELOCITY) {
+            if (nectarLauncher.getVelocity() >= nectarMinGate) {
                 nectarAtSpeed = true;
             }
 
@@ -272,10 +290,10 @@ public class UseThisCode extends OpMode {
 
         // Pollen Launcher & Gate (Right Trigger Hold)
         if (gamepad1.right_trigger > 0.5) {
-            pollenLauncher.setVelocity(POLLEN_TARGET_VELOCITY);
+            pollenLauncher.setVelocity(pollenTarget);
 
             // Once it hits the threshold for the first time while held, flag it as ready
-            if (pollenLauncher.getVelocity() >= POLLEN_MIN_GATE_VELOCITY) {
+            if (pollenLauncher.getVelocity() >= pollenMinGate) {
                 pollenAtSpeed = true;
             }
 
