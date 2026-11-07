@@ -65,8 +65,8 @@ public class AutonmousBioBuzzPosition2 extends LinearOpMode {
     public final double POLLEN_FIRE_DURATION = 4.0;     // Step 1: Fire pollen balls
     public final double MOVE_BACK_1_DURATION = 0.4;     // Step 2: First backward movement
     public final double STRAFE_RIGHT_1_DURATION = 1.0;  // Step 3: First strafe right movement
-    public final double MOVE_BACK_2_DURATION = 3.0;     // Step 4: Second backward movement
-    public final double STRAFE_RIGHT_2_DURATION = 0.8;  // Step 5: Second strafe right movement
+    public final double MOVE_BACK_2_DURATION = 1.1;     // Step 4: Second backward movement
+    public final double STRAFE_RIGHT_2_DURATION = 0.3;  // Step 5: Second strafe right movement
     // ==========================================
 
     // Pollen & Nectar Gate Positions
