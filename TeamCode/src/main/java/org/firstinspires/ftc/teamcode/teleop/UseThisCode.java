@@ -172,12 +172,12 @@ public class UseThisCode extends OpMode {
         // Driver controls: Left stick Y = forward/reverse, Left stick X = strafe, Right stick X = turn
         mecanumDrive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
 
-        // Check battery voltage and control the goBILDA indicator light color
+        // Check battery voltage and control the goBILDA indicator light color with corrected positions
         double currentVoltage = batteryVoltageSensor.getVoltage();
         if (currentVoltage >= 12.0) {
-            indicatorLight.setPosition(0.33); // Green
+            indicatorLight.setPosition(0.50); // Green spectrum position
         } else {
-            indicatorLight.setPosition(0.0);  // Red
+            indicatorLight.setPosition(0.28);  // Red spectrum position
         }
 
         // ==========================================
@@ -233,7 +233,8 @@ public class UseThisCode extends OpMode {
         leftIntake.setPower(intakePower);
         rightIntake.setPower(intakePower);
 
-        telemetry.addData("Battery Voltage", "%.2fV (%s)", currentVoltage, currentVoltage >= 12.0 ? "GREEN" : "RED");
+        // Telemetry readout for Driver Station
+        telemetry.addData("Battery Voltage", "%.2f V (%s)", currentVoltage, currentVoltage >= 12.0 ? "GREEN" : "RED");
         telemetry.addData("Velocity Reduction", "-%.1f RPM", velocityReduction);
         telemetry.addData("Target Vels", "nectar (%d), pollen (%d)", adjustedNectarTarget, adjustedPollenTarget);
         telemetry.addData("Launcher Vels", "nectar (%.0f), pollen (%.0f)", nectarLauncher.getVelocity(), pollenLauncher.getVelocity());
