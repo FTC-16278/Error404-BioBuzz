@@ -77,18 +77,28 @@ public class AprilTagWebcam {
         }
     }
 
-    public AprilTagSingleDetection getSingleTagBySpecificId(AprilTagSingleDetection detection, int id) {
-        if (detection.id == id)
-            return detection;
-        else
-            return null;
+    public AprilTagSingleDetection getSingleTagBySpecificId(int id) {
+        for (AprilTagDetection detection : detectedTags) {
+            if (detection instanceof AprilTagSingleDetection) {
+                AprilTagSingleDetection singleDet = (AprilTagSingleDetection) detection;
+                if (singleDet.id == id) {
+                    return singleDet;
+                }
+            }
+        }
+        return null;
     }
 
-    public AprilTagClusterDetection getClusterTagByPercentage(AprilTagClusterDetection detection, int percent) {
-        if (detection.percentClusterFound >= percent)
-            return detection;
-        else
-            return null;
+    public AprilTagClusterDetection getClusterTagByPercentage(int percent) {
+        for (AprilTagDetection detection: detectedTags) {
+            if (detection instanceof AprilTagClusterDetection) {
+                AprilTagClusterDetection clusterDet = (AprilTagClusterDetection) detection;
+                if (clusterDet.percentClusterFound >= percent) {
+                    return clusterDet;
+                }
+            }
+        }
+        return null;
     }
 
     public void stop() {

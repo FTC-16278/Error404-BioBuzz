@@ -5,15 +5,16 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.teamcode.mechanisms.AprilTagWebcam;
 import org.firstinspires.ftc.vision.apriltag.AprilTagClusterDetection;
-import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagSingleDetection;
-
-import java.util.List;
 
 @Autonomous
 public class AprilTagWebcamExample extends OpMode {
     AprilTagWebcam aprilTagWebcam = new AprilTagWebcam();
-    List<AprilTagDetection> detectedTags;
+    AprilTagSingleDetection singleTagIdFound;
+    AprilTagClusterDetection percentClusterFound;
+    boolean USE_CLUSTER_TAG = true;
+    int SINGLE_TAG_ID = 30;
+    int CLUSTER_TAG_PERCENT = 70;
 
     @Override
     public void init() {
@@ -23,18 +24,13 @@ public class AprilTagWebcamExample extends OpMode {
     @Override
     public void loop() {
         aprilTagWebcam.update();
-        detectedTags = aprilTagWebcam.getDetectedTags();
 
-        for (AprilTagDetection detection : detectedTags) {
-            if (detection instanceof AprilTagSingleDetection) {
-                AprilTagSingleDetection singleDet = (AprilTagSingleDetection) detection;
-                AprilTagSingleDetection id30 = aprilTagWebcam.getSingleTagBySpecificId(singleDet, 30);
-                aprilTagWebcam.displayDetectionTelemetry(id30);
-            } else { // cluster detection
-                AprilTagClusterDetection clusterDet = (AprilTagClusterDetection) detection;
-                AprilTagClusterDetection percent70 = aprilTagWebcam.getClusterTagByPercentage(clusterDet, 70);
-                aprilTagWebcam.displayDetectionTelemetry(percent70);
-            }
+        if (!USE_CLUSTER_TAG) {
+            singleTagIdFound = aprilTagWebcam.getSingleTagBySpecificId(SINGLE_TAG_ID);
+            aprilTagWebcam.displayDetectionTelemetry(singleTagIdFound);
+        } else {
+            percentClusterFound = aprilTagWebcam.getClusterTagByPercentage(CLUSTER_TAG_PERCENT);
+            aprilTagWebcam.displayDetectionTelemetry(percentClusterFound);
         }
     }
 }
